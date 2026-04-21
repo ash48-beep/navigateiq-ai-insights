@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  # ──────────────────────────────
+  # NestJS Backend
+  # ──────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: navigate-ai-backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3002}:3002"
+    env_file:
+      - ./backend/.env          # local development secrets (git-ignored)
+    environment:
+      NODE_ENV: production
+    volumes:
+      # Mount the Snowflake private key at the path the app expects.
+      # Update the left-hand side to match SNOWFLAKE_PRIVATE_KEY_PATH in your .env
+      - ./backend/keys:/app/keys:ro
+      # Mount semantic models so new/updated .yaml files are picked up without rebuilding
+      - ./backend/semantic-models:/app/semantic-models:ro
+
+      - ./logs:/app/logs
+    networks:
+      - app-network
+    healthcheck:
+      # /api/docs (Swagger UI) is always registered and returns 200
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3002/api/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ──────────────────────────────
+  # React Frontend (nginx)
+  # ──────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # The browser talks to the backend, so this must be a host-reachable URL.
+        # Change to your public domain/IP when deploying to a server.
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:3002/api/v1}
+    container_name: navigate-ai-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

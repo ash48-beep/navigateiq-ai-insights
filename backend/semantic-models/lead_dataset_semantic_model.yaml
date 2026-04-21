@@ -1,0 +1,145 @@
+name: lead_dataset_semantic_model
+description: Semantic model for lead analytics and whitepaper engagement
+
+tables:
+  - name: lead_dataset
+
+    base_table:
+      database: NAVIGATE_DB
+      schema: PUBLIC
+      table: LEAD_DATASET
+
+    dimensions:
+
+      - name: lead_id
+        expr: LEAD_ID
+        data_type: VARCHAR
+
+      - name: first_name
+        expr: FIRST_NAME
+        data_type: VARCHAR
+
+      - name: last_name
+        expr: LAST_NAME
+        data_type: VARCHAR
+
+      - name: job_title
+        expr: JOB_TITLE
+        data_type: VARCHAR
+
+      - name: company
+        expr: COMPANY
+        data_type: VARCHAR
+
+      - name: industry
+        expr: INDUSTRY
+        data_type: VARCHAR
+
+      - name: company_size
+        expr: COMPANY_SIZE
+        data_type: VARCHAR
+
+      - name: email
+        expr: EMAIL
+        data_type: VARCHAR
+
+      - name: phone
+        expr: PHONE
+        data_type: VARCHAR
+
+      - name: city
+        expr: CITY
+        data_type: VARCHAR
+
+      - name: state
+        expr: STATE
+        data_type: VARCHAR
+
+      - name: country
+        expr: COUNTRY
+        data_type: VARCHAR
+
+      - name: lead_source
+        expr: LEAD_SOURCE
+        data_type: VARCHAR
+
+      - name: white_paper_downloaded
+        expr: WHITE_PAPER_DOWNLOADED
+        data_type: VARCHAR
+
+      - name: budget
+        expr: BUDGET
+        data_type: VARCHAR
+
+      - name: authority
+        expr: AUTHORITY
+        data_type: VARCHAR
+
+      - name: need
+        expr: NEED
+        data_type: VARCHAR
+
+      - name: timing
+        expr: TIMING
+        data_type: VARCHAR
+
+      - name: lead_status
+        expr: LEAD_STATUS
+        data_type: VARCHAR
+
+      - name: download_date
+        expr: DOWNLOAD_DATE
+        data_type: DATE
+
+
+    facts:
+
+      - name: total_leads
+        expr: COUNT(LEAD_ID)
+        data_type: NUMBER
+
+      - name: total_whitepaper_downloads
+        expr: COUNT(WHITE_PAPER_DOWNLOADED)
+        data_type: NUMBER
+
+
+verified_queries:
+
+  - name: leads_timeline
+    semanticModelName: lead_dataset_semantic_model
+    question: show me all the leads in a timeline form account
+    sql: |
+      SELECT
+        DOWNLOAD_DATE,
+        COMPANY,
+        FIRST_NAME,
+        LAST_NAME,
+        JOB_TITLE,
+        LEAD_STATUS
+      FROM NAVIGATE_DB.PUBLIC.LEAD_DATASET
+      ORDER BY DOWNLOAD_DATE
+
+
+  - name: most_popular_whitepaper
+    semanticModelName: lead_dataset_semantic_model
+    question: what whitepaper topic was most popular
+    sql: |
+      SELECT
+        WHITE_PAPER_DOWNLOADED,
+        COUNT(*) AS TOTAL_DOWNLOADS
+      FROM NAVIGATE_DB.PUBLIC.LEAD_DATASET
+      GROUP BY WHITE_PAPER_DOWNLOADED
+      ORDER BY TOTAL_DOWNLOADS DESC
+
+
+  - name: job_titles_by_industry
+    semanticModelName: lead_dataset_semantic_model
+    question: what job titles show up my industry
+    sql: |
+      SELECT
+        INDUSTRY,
+        JOB_TITLE,
+        COUNT(*) AS TOTAL_LEADS
+      FROM NAVIGATE_DB.PUBLIC.LEAD_DATASET
+      GROUP BY INDUSTRY, JOB_TITLE
+      ORDER BY INDUSTRY, TOTAL_LEADS DESC

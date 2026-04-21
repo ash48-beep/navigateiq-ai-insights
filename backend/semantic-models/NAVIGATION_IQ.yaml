@@ -1,0 +1,130 @@
+name: NAVIGATION_IQ
+tables:
+  - name: B2B_LEADS
+    description: The table contains records of business-to-business (B2B) sales leads. Each record represents an individual lead and includes personal and professional contact details, company information such as industry and size, and data related to the marketing asset that generated the lead.
+    base_table:
+      database: NAVIQ
+      schema: PUBLIC
+      table: B2B_LEADS
+    dimensions:
+      - name: ASSET_NAME
+        description: The name of the marketing or sales asset associated with the lead.
+        expr: ASSET_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - dell-private-cloud-solution-brief.pdf
+          - Dell Automation Platform Private Cloud Infographic
+          - Dell Private Cloud Video
+      - name: ASSET_URL
+        description: The uniform resource locator (URL) linking to a digital asset such as a document, video, or other media resource.
+        expr: ASSET_URL
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - https://www.delltechnologies.com/asset/en-us/solutions/infrastructure-solutions/briefs-summaries/dell-private-cloud-infographic.pdf
+          - https://players.brightcove.net/694940018001/default_default/index.html?videoId=6372530651112
+          - https://www.delltechnologies.com/asset/en-us/solutions/infrastructure-solutions/briefs-summaries/dell-private-cloud-solution-brief.pdf
+      - name: AUTHORITY
+        description: The level of decision-making authority or role that a business-to-business lead holds within their organization.
+        expr: AUTHORITY
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Decision Maker
+          - Influencer
+          - No Role
+      - name: COMPANY_NAME
+        description: The name of the company associated with a business-to-business lead.
+        expr: COMPANY_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Quantum Logic
+          - Epsilon Dynamics
+          - Delta Group
+      - name: EMAIL
+        description: Email addresses of business-to-business leads.
+        expr: EMAIL
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - jackson@synergysoftware.biz
+          - smith@innovasolutions.org
+          - john@betasolutions.org
+      - name: EMPLOYEE_COUNT
+        description: The number of employees at the lead company expressed as a range.
+        expr: EMPLOYEE_COUNT
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - 51-200
+          - 501-1000
+          - 5000+
+      - name: FIRST_NAME
+        description: The first name of a business-to-business lead.
+        expr: FIRST_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - John
+          - Karen
+          - Patricia
+      - name: ID
+        description: Unique identifier assigned to each business-to-business lead record.
+        expr: ID
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - L-01
+          - L-48
+          - L-106
+      - name: INDUSTRY
+        description: The industry sector associated with a business-to-business lead.
+        expr: INDUSTRY
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Energy
+          - Education
+          - Retail
+      - name: JOB_TITLE
+        description: The job title of the business-to-business lead contact.
+        expr: JOB_TITLE
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - IT Manager
+          - HR Director
+          - VP of Sales
+      - name: LAST_NAME
+        description: The last name of the business-to-business lead.
+        expr: LAST_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Hernandez
+          - Thomas
+          - Davis
+      - name: PHONE_NUMBER
+        description: Phone numbers associated with business-to-business leads.
+        expr: PHONE_NUMBER
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '16485902077'
+          - '16032042767'
+          - '15117970884'
+      - name: TIMING
+        description: The anticipated timeframe within which a business-to-business lead expects to make a purchasing decision.
+        expr: TIMING
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - more than twelve months
+          - 6 months
+          - 3 months
+      - name: WEBSITE
+        description: The website address associated with the business lead.
+        expr: WEBSITE
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - www.betasolutions.co
+          - www.gammaenterprises.org
+          - www.networks.biz
+    time_dimensions:
+      - name: LEAD_DATE
+        description: The date on which a business-to-business lead was recorded.
+        expr: LEAD_DATE
+        data_type: DATE
+        sample_values:
+          - '2026-02-17'
+          - '2026-03-12'
+          - '2026-03-06'

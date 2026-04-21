@@ -1,0 +1,93 @@
+
+.paginated-table-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Horizontal scroll ONLY here */
+.paginated-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table grows beyond container */
+.paginated-table {
+  border-collapse: collapse;
+  width: max-content;   /* 🔥 key: allows horizontal expansion */
+  min-width: 100%;      /* ensures base width */
+  font-size: 14px;
+  color: #1e293b;
+}
+
+/* Header */
+.paginated-table thead tr {
+  background-color: #f1f5f9;
+}
+
+.paginated-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+/* Cells */
+.paginated-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  white-space: nowrap; /* 🔥 keeps full content visible in one line */
+}
+
+/* Row hover */
+.paginated-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Remove last border */
+.paginated-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Optional: minimum column width for readability */
+.paginated-table th,
+.paginated-table td {
+  min-width: 120px;
+}
+
+/* Footer */
+.paginated-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.paginated-table-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.paginated-table-controls button {
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.paginated-table-controls button:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.paginated-table-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

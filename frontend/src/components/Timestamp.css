@@ -1,0 +1,19 @@
+.message-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.message-timestamp {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.message.user .message-timestamp {
+  text-align: left;
+}
+
+.message.bot .message-timestamp {
+  text-align: left;
+}

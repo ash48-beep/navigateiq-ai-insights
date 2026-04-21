@@ -1,0 +1,129 @@
+name: NAVIQ_TEST3
+tables:
+  - name: B2B_LEADS
+    description: The table contains business-to-business sales lead information collected from potential customers. Each record represents a prospective client contact and includes their professional details, company information, and engagement data related to specific marketing assets.
+    base_table:
+      database: NAVIQ_TEST
+      schema: PUBLIC
+      table: B2B_LEADS
+    dimensions:
+      - name: ASSET_NAME
+        description: The name of the digital asset or content resource.
+        expr: ASSET_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Asset Name
+          - dell-private-cloud-solution-brief.pdf
+          - Dell Private Cloud Video
+      - name: ASSET_URL
+        description: The web address linking to the digital asset or content.
+        expr: ASSET_URL
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - https://players.brightcove.net/694940018001/default_default/index.html?videoId=6372530651112
+          - https://www.delltechnologies.com/asset/en-us/solutions/infrastructure-solutions/briefs-summaries/dell-private-cloud-solution-brief.pdf
+          - Asset URL
+      - name: AUTHORITY
+        description: The level of decision-making authority or influence held by the business contact.
+        expr: AUTHORITY
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Decision Maker
+          - No Role
+          - Authority
+      - name: COMPANY_NAME
+        description: The name of the business organization.
+        expr: COMPANY_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Beta Solutions
+          - Company Name
+          - Apex Consulting
+      - name: EMAIL
+        description: Business email addresses used for contact purposes.
+        expr: EMAIL
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - wilson@meridianhealth.com
+          - smith@alphatech.co
+          - john@betasolutions.org
+      - name: EMPLOYEE_COUNT
+        description: The number range of employees at the company.
+        expr: EMPLOYEE_COUNT
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - 51-200
+          - 501-1000
+          - Employee Count
+      - name: FIRST_NAME
+        description: The given name or personal name of an individual.
+        expr: FIRST_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - John
+          - First Name
+          - Karen
+      - name: ID
+        description: A unique identifier for each business lead.
+        expr: ID
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - L-100
+          - L-107
+          - L-128
+      - name: INDUSTRY
+        description: The primary business sector or market segment in which a company operates.
+        expr: INDUSTRY
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Industry
+          - Education
+          - Telecommunications
+      - name: JOB_TITLE
+        description: Professional position or role held by an individual within their organization.
+        expr: JOB_TITLE
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - VP of Sales
+          - Job Title
+          - IT Manager
+      - name: LAST_NAME
+        description: The surname or family name of the person.
+        expr: LAST_NAME
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Davis
+          - Hernandez
+          - Last Name
+      - name: PHONE_NUMBER
+        description: Phone numbers used for business contact purposes.
+        expr: PHONE_NUMBER
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '14060748036'
+          - '15883622150'
+          - '16111487912'
+      - name: TIMING
+        description: The expected timeframe for making a business purchasing decision.
+        expr: TIMING
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Timing
+          - more than twelve months
+          - 6 months
+      - name: WEBSITE
+        description: Website domain addresses of business leads.
+        expr: WEBSITE
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - www.pinnacledata.io
+          - www.techcorp.com
+          - www.betasolutions.org
+    time_dimensions:
+      - name: LEAD_DATE
+        description: The date when a business lead was received.
+        expr: LEAD_DATE
+        data_type: DATE
+        sample_values:
+          - '2026-03-06'
+          - '2026-03-08'

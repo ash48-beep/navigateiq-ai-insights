@@ -1,0 +1,90 @@
+name: lead_generation_model
+description: Semantic model for analyzing marketing leads, whitepaper downloads, and company engagement.
+tables:
+  - name: leads
+    description: Lead level dataset containing marketing leads and whitepaper engagement
+    base_table:
+      database: NAVIGATE_DB
+      schema: PUBLIC
+      table: LEAD_DATASET
+    dimensions:
+      - name: authority
+        expr: Authority
+        data_type: string
+      - name: budget
+        expr: Budget
+        data_type: string
+      - name: city
+        expr: City
+        data_type: string
+      - name: company
+        description: Account or company name
+        expr: Company
+        data_type: string
+      - name: company_size
+        expr: Company_Size
+        data_type: string
+      - name: country
+        expr: Country
+        data_type: string
+      - name: first_name
+        expr: First_Name
+        data_type: string
+      - name: full_name
+        expr: CONCAT(First_Name,' ',Last_Name)
+        data_type: string
+      - name: industry
+        expr: Industry
+        data_type: string
+      - name: job_title
+        description: Job role of the lead
+        expr: Job_Title
+        data_type: string
+      - name: last_name
+        expr: Last_Name
+        data_type: string
+      - name: lead_id
+        description: Unique lead identifier
+        expr: Lead_ID
+        data_type: string
+      - name: lead_source
+        expr: Lead_Source
+        data_type: string
+      - name: lead_status
+        expr: Lead_Status
+        data_type: string
+      - name: need
+        expr: Need
+        data_type: string
+      - name: state
+        expr: State
+        data_type: string
+      - name: timing
+        expr: Timing
+        data_type: string
+      - name: whitepaper_topic
+        description: Whitepaper downloaded by the lead
+        expr: White_Paper_Downloaded
+        data_type: string
+    time_dimensions:
+      - name: download_date
+        description: Date when the whitepaper was downloaded
+        expr: Download_Date
+        data_type: date
+    facts:
+      - name: popular_whitepaper
+        expr: COUNT(White_Paper_Downloaded)
+        data_type: number
+      - name: total_leads
+        description: Total number of leads
+        expr: COUNT(Lead_ID)
+        data_type: number
+      - name: total_whitepaper_downloads
+        expr: COUNT(White_Paper_Downloaded)
+        data_type: number
+      - name: unique_companies
+        expr: COUNT(DISTINCT Company)
+        data_type: number
+    primary_key:
+      columns:
+        - LEAD_ID
