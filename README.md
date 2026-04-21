@@ -1,0 +1,1 @@
+# navigateiq-ai-insights
