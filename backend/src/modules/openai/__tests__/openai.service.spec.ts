@@ -11,7 +11,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { OpenAIService } from './openai.service';
+import { OpenAIService } from '../openai.service';
 
 // ─── Mock the openai npm package ─────────────────────────────────────────────
 
@@ -312,6 +312,117 @@ describe('OpenAIService', () => {
       expect(payload.all_rows.length).toBe(10);
       // sample_rows is [] for small datasets (no duplication)
       expect(payload.sample_rows).toEqual([]);
+    });
+  });
+
+  // ── enrichSemanticModel ───────────────────────────────────────────────────
+
+  describe('enrichSemanticModel', () => {
+    const baseYaml = `name: alpha_semantic_model\ntables:\n  - name: alpha_data\n    base_table:\n      database: ALPHA_DB\n      schema: PUBLIC\n      table: ALPHA_DATA\n`;
+
+    const columns = [
+      { name: 'NAME',      type: 'varchar' as const },
+      { name: 'REVENUE',   type: 'numeric' as const },
+      { name: 'JOIN_DATE', type: 'date'    as const },
+    ];
+
+    it('returns enriched YAML when GPT responds with valid YAML', async () => {
+      const enriched = [
+        'name: alpha_semantic_model',
+        'tables:',
+        '  - name: alpha_data',
+        '    base_table:',
+        '      database: ALPHA_DB',
+        '      schema: PUBLIC',
+        '      table: ALPHA_DATA',
+        '    dimensions:',
+        '      - name: name',
+        '        expr: NAME',
+        '        data_type: VARCHAR',
+        '        description: Customer name',
+        '',
+      ].join('\n');
+      gptReturns(enriched);
+
+      const result = await service.enrichSemanticModel(
+        baseYaml, columns, 'Alpha', 'ALPHA_DATA', 'ALPHA_DB', 'PUBLIC',
+      );
+      expect(result).toContain('alpha_semantic_model');
+      expect(result).toContain('description: Customer name');
+    });
+
+    it('strips markdown fences GPT accidentally adds', async () => {
+      const enriched = [
+        'name: alpha_semantic_model',
+        'tables:',
+        '  - name: alpha_data',
+        '    base_table:',
+        '      database: ALPHA_DB',
+        '      schema: PUBLIC',
+        '      table: ALPHA_DATA',
+        '',
+      ].join('\n');
+      gptReturns(`\`\`\`yaml\n${enriched}\`\`\``);
+
+      const result = await service.enrichSemanticModel(
+        baseYaml, columns, 'Alpha', 'ALPHA_DATA', 'ALPHA_DB', 'PUBLIC',
+      );
+      expect(result).not.toContain('```');
+      expect(result).toContain('alpha_semantic_model');
+    });
+
+    it('falls back to baseYaml when GPT returns invalid YAML', async () => {
+      gptReturns('this is: not: valid: yaml: :::');
+
+      const result = await service.enrichSemanticModel(
+        baseYaml, columns, 'Alpha', 'ALPHA_DATA', 'ALPHA_DB', 'PUBLIC',
+      );
+      expect(result).toBe(baseYaml);
+    });
+
+    it('falls back to baseYaml when GPT throws', async () => {
+      mockCreate.mockRejectedValueOnce(new Error('GPT timeout'));
+
+      const result = await service.enrichSemanticModel(
+        baseYaml, columns, 'Alpha', 'ALPHA_DATA', 'ALPHA_DB', 'PUBLIC',
+      );
+      expect(result).toBe(baseYaml);
+    });
+
+    it('returns baseYaml immediately when OpenAI is not configured', async () => {
+      const noKeyService = await buildModule(undefined);
+      const result = await noKeyService.enrichSemanticModel(
+        baseYaml, columns, 'Alpha', 'ALPHA_DATA', 'ALPHA_DB', 'PUBLIC',
+      );
+      expect(result).toBe(baseYaml);
+      expect(mockCreate).not.toHaveBeenCalled();
+    });
+
+    it('includes fully-qualified table name in the prompt', async () => {
+      gptReturns(baseYaml);
+
+      await service.enrichSemanticModel(
+        baseYaml, columns, 'Alpha', 'ALPHA_DATA', 'ALPHA_DB', 'PUBLIC',
+      );
+
+      const call = mockCreate.mock.calls[0][0];
+      const userContent = call.messages[1].content as string;
+      expect(userContent).toContain('ALPHA_DB.PUBLIC.ALPHA_DATA');
+    });
+
+    it('lists all column names and types in the prompt', async () => {
+      gptReturns(baseYaml);
+
+      await service.enrichSemanticModel(
+        baseYaml, columns, 'Alpha', 'ALPHA_DATA', 'ALPHA_DB', 'PUBLIC',
+      );
+
+      const call = mockCreate.mock.calls[0][0];
+      const userContent = call.messages[1].content as string;
+      expect(userContent).toContain('REVENUE');
+      expect(userContent).toContain('numeric');
+      expect(userContent).toContain('JOIN_DATE');
+      expect(userContent).toContain('date');
     });
   });
 

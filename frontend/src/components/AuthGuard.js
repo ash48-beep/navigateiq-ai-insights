@@ -62,10 +62,7 @@ function AuthGuard({ children }) {
     return (
       <LoginPage
         onLogin={() => {
-          // Clear any /login path from the URL so the user lands on the root
-          if (window.location.pathname !== '/') {
-            window.history.replaceState({}, '', '/');
-          }
+          // Stay on the current path — do not redirect, let React Router keep the slug
           setAuthState('authenticated');
         }}
       />

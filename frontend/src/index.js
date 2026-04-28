@@ -1,5 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Amplify is now configured dynamically per route:
+//   - Client routes: configured inside ClientConfigContext (from backend)
+//   - Admin route:   configured inside AdminAuthGuard (from env vars)
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';

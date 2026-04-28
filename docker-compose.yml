@@ -13,21 +13,15 @@ services:
     ports:
       - "${PORT:-3002}:3002"
     env_file:
-      - ./backend/.env          # local development secrets (git-ignored)
+      - ./backend/.env
     environment:
       NODE_ENV: production
     volumes:
-      # Mount the Snowflake private key at the path the app expects.
-      # Update the left-hand side to match SNOWFLAKE_PRIVATE_KEY_PATH in your .env
       - ./backend/keys:/app/keys:ro
-      # Mount semantic models so new/updated .yaml files are picked up without rebuilding
       - ./backend/semantic-models:/app/semantic-models:ro
-
-      - ./logs:/app/logs
     networks:
       - app-network
     healthcheck:
-      # /api/docs (Swagger UI) is always registered and returns 200
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3002/api/docs"]
       interval: 30s
       timeout: 10s
@@ -35,16 +29,17 @@ services:
       start_period: 30s
 
   # ──────────────────────────────
-  # React Frontend (nginx)
+  # React Frontend — client app (port 3000)
   # ──────────────────────────────
   frontend:
+    image: navigate-ai-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # The browser talks to the backend, so this must be a host-reachable URL.
-        # Change to your public domain/IP when deploying to a server.
         REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:3002/api/v1}
+        REACT_APP_ADMIN_COGNITO_USER_POOL_ID: ${REACT_APP_ADMIN_COGNITO_USER_POOL_ID}
+        REACT_APP_ADMIN_COGNITO_CLIENT_ID:    ${REACT_APP_ADMIN_COGNITO_CLIENT_ID}
     container_name: navigate-ai-frontend
     restart: unless-stopped
     ports:
@@ -52,6 +47,22 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    networks:
+      - app-network
+
+  # ──────────────────────────────
+  # Admin Dashboard — separate port (7429)
+  # Same image as frontend — nginx restricts /admin route only
+  # Port 7429 is intentionally non-obvious to clients
+  # ──────────────────────────────
+  admin:
+    image: navigate-ai-frontend   # reuse the same built image — no separate build needed
+    container_name: navigate-ai-admin
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PORT:-7429}:80"
+    depends_on:
+      - frontend
     networks:
       - app-network
 

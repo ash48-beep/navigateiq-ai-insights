@@ -1,9 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SnowflakeAnalystService } from '../snowflake-analyst/snowflake-analyst.service';
 import { OpenAIService } from '../openai/openai.service';
-import * as fs from 'fs';
-import * as fsPromises from 'fs/promises';
-import * as path from 'path';
 
 // One history entry = one Cortex Analyst messages-array item
 interface ConversationTurn {
@@ -45,40 +42,6 @@ export class ChatService {
     return this.sessions.get(sessionId)?.history ?? [];
   }
 
-  // Fire-and-forget — never blocks the main request path
-  private saveQueryToFile(query: string, sessionId?: string): void {
-    setImmediate(async () => {
-      try {
-        const filePath = path.join(process.cwd(), 'logs', 'queries.json');
-        const MAX_ENTRIES = 1000;   // developer-configurable
-        const TRIM_TO    = 800;     // trim down to this when limit is hit
-
-        let data: any[] = [];
-
-        if (fs.existsSync(filePath)) {
-          const file = await fsPromises.readFile(filePath, 'utf-8');
-          data = JSON.parse(file || '[]');
-        }
-
-        data.push({
-          query,
-          sessionId: sessionId || null,
-          timestamp: new Date().toISOString(),
-        });
-
-        // Trim oldest entries if over the limit
-        if (data.length > MAX_ENTRIES) {
-          data = data.slice(data.length - TRIM_TO);
-        }
-
-        // No pretty-printing — faster write, smaller file
-        await fsPromises.writeFile(filePath, JSON.stringify(data));
-      } catch (err) {
-        console.error('Failed to save query:', err);
-      }
-    });
-  }
-
   private saveHistory(sessionId: string | undefined, userMessage: string, result: any) {
     if (!sessionId) return;
 
@@ -107,7 +70,6 @@ export class ChatService {
       const history = this.getHistory(sessionId);
       const result = await this.snowflake.ask(message, true, history);
 
-      this.saveQueryToFile(message, sessionId); 
 
       // Cortex returned suggestions — prompt was ambiguous, skip GPT entirely
       if (result.suggestions && result.suggestions.length > 0) {
@@ -151,7 +113,6 @@ export class ChatService {
     try {
       const history = this.getHistory(sessionId);
       const result = await this.snowflake.ask(message, true, history);
-      this.saveQueryToFile(message, sessionId);
       
       // Cortex returned suggestions — prompt was ambiguous, skip GPT entirely
       if (result.suggestions && result.suggestions.length > 0) {

@@ -29,6 +29,18 @@ export interface ClientRecord {
   logoUrl: string;
   headerImageUrl: string;
   faviconUrl: string;
+
+  // Snowflake / CSV pipeline config
+  snowflakeAccount?: string;     // e.g. "xy12345.us-east-1"
+  snowflakeUser?: string;        // e.g. "NAVIGATE_USER"
+  snowflakePassword?: string;    // e.g. "secret"
+  snowflakeWarehouse?: string;   // e.g. "COMPUTE_WH"
+  snowflakeDatabase?: string;    // e.g. "NAVIGATE_DB"
+  snowflakeSchema?: string;      // e.g. "PUBLIC"
+  snowflakeTable?: string;       // e.g. "LEADS_DATA"
+  snowflakeStageName?: string;   // e.g. "CSV_UPLOAD_STAGE"
+  idPrefix?: string;             // prefix for auto-generated ID col; "" = no ID col
+  dateColumns?: Record<string, string>; // { "LEAD_DATE": "DD-MM-YYYY" }
 }
 
 @Injectable()

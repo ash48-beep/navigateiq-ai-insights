@@ -166,7 +166,7 @@ describe('AdminDashboard — add client form', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /\+ Add Client/i }));
 
-    expect(screen.getByText('Add a new tenant')).toBeInTheDocument();
+    expect(screen.getByText('Add New Client')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Create Client/i })).toBeInTheDocument();
   });
 
@@ -193,10 +193,10 @@ describe('AdminDashboard — add client form', () => {
     await waitFor(() => screen.getByText('Alpha'));
 
     fireEvent.click(screen.getByRole('button', { name: /\+ Add Client/i }));
-    expect(screen.getByText('Add a new tenant')).toBeInTheDocument();
+    expect(screen.getByText('Add New Client')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
-    expect(screen.queryByText('Add a new tenant')).not.toBeInTheDocument();
+    expect(screen.queryByText('Add New Client')).not.toBeInTheDocument();
   });
 
   it('calls POST API and reloads list on successful create', async () => {
@@ -213,8 +213,8 @@ describe('AdminDashboard — add client form', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /\+ Add Client/i }));
 
-    fireEvent.change(screen.getByPlaceholderText('demandARC'), { target: { value: 'gamma' } });
-    fireEvent.change(screen.getByPlaceholderText('DemandARC'), { target: { value: 'Gamma' } });
+    fireEvent.change(screen.getByPlaceholderText('e.g. demandarc'), { target: { value: 'gamma' } });
+    fireEvent.change(screen.getByPlaceholderText('e.g. DemandARC'), { target: { value: 'Gamma' } });
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/navigateiq/i), { target: { value: 'https://gamma.com' } });
 
     fireEvent.click(screen.getByRole('button', { name: /Create Client/i }));
@@ -241,8 +241,8 @@ describe('AdminDashboard — add client form', () => {
     await waitFor(() => screen.getByText('Alpha'));
 
     fireEvent.click(screen.getByRole('button', { name: /\+ Add Client/i }));
-    fireEvent.change(screen.getByPlaceholderText('demandARC'), { target: { value: 'alpha' } });
-    fireEvent.change(screen.getByPlaceholderText('DemandARC'), { target: { value: 'Alpha' } });
+    fireEvent.change(screen.getByPlaceholderText('e.g. demandarc'), { target: { value: 'alpha' } });
+    fireEvent.change(screen.getByPlaceholderText('e.g. DemandARC'), { target: { value: 'Alpha' } });
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/navigateiq/i), { target: { value: 'https://alpha.com' } });
     fireEvent.click(screen.getByRole('button', { name: /Create Client/i }));
 
@@ -261,7 +261,7 @@ describe('AdminDashboard — edit client', () => {
 
     fireEvent.click(screen.getAllByTitle('Edit')[0]);
 
-    expect(screen.getByText('Edit Client')).toBeInTheDocument();
+    expect(screen.getByText(/^Edit —/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Save Changes/i })).toBeInTheDocument();
   });
 
@@ -294,8 +294,8 @@ describe('AdminDashboard — delete client', () => {
     await waitFor(() => screen.getByText('Alpha'));
 
     fireEvent.click(screen.getAllByTitle('Delete')[0]);
-    expect(screen.getByText(/Delete client\?/i)).toBeInTheDocument();
-    expect(screen.getByText(/This will permanently remove/i)).toBeInTheDocument();
+    expect(screen.getByText(/Delete Client/i)).toBeInTheDocument();
+    expect(screen.getByText(/This action cannot be undone/i)).toBeInTheDocument();
   });
 
   it('calls DELETE API on confirm', async () => {
@@ -310,7 +310,7 @@ describe('AdminDashboard — delete client', () => {
     await waitFor(() => screen.getByText('Alpha'));
 
     fireEvent.click(screen.getAllByTitle('Delete')[0]);
-    fireEvent.click(screen.getByRole('button', { name: /Yes, delete/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Delete$/i }));
 
     await waitFor(() => {
       const deleteCalls = global.fetch.mock.calls.filter(c => c[1]?.method === 'DELETE');
@@ -325,10 +325,10 @@ describe('AdminDashboard — delete client', () => {
     await waitFor(() => screen.getByText('Alpha'));
 
     fireEvent.click(screen.getAllByTitle('Delete')[0]);
-    expect(screen.getByText(/Delete client\?/i)).toBeInTheDocument();
+    expect(screen.getByText(/Delete Client/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /^Cancel$/i }));
-    expect(screen.queryByText(/Delete client\?/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Delete Client')).not.toBeInTheDocument();
   });
 });
 

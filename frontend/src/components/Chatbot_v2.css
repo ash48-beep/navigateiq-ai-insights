@@ -14,7 +14,7 @@
 }
 
 .chatbot-v2-header {
-  background-color: #2A598F;
+  background-color: var(--primary, #2A598F);
   /* header_image applied via inline style â€” constrained below */
   background-size: 100% 100%;
   background-position: top center;
@@ -277,7 +277,7 @@
 
 .question-item:hover:not(.disabled) {
   /* background: linear-gradient(135deg, #90f65c 0%, #8b5cf6 100%); */
-  background: linear-gradient(135deg, #2A598F 0%, #6895BF 100%);
+  background: linear-gradient(135deg, var(--primary, #2A598F) 0%, var(--primary-light, #6895BF) 100%);
   color: white;
   border-color: #90f65c;
   transform: translateY(-1px);
@@ -330,7 +330,7 @@
 
 .custom-textarea:focus {
   outline: none;
-  border-color: #2A598F;
+  border-color: var(--primary, #2A598F);
   box-shadow: 0 0 0 3px rgba(42, 89, 143, 0.1);
 }
 
@@ -341,7 +341,7 @@
 
 .ask-btn {
   /* background: linear-gradient(135deg, #90f65c 0%, #8b5cf6 100%); */
-  background: linear-gradient(135deg, #2A598F 0%, #6895BF 100%);
+  background: linear-gradient(135deg, var(--primary, #2A598F) 0%, var(--primary-light, #6895BF) 100%);
   color: white;
   border: none;
   padding: 4px 15px;
@@ -442,7 +442,7 @@
 
 .bot-avatar {
   /* background: linear-gradient(135deg, #90f65c 0%, #8b5cf6 100%); */
-  background: linear-gradient(135deg, #2A598F 0%, #6895BF 100%);
+  background: linear-gradient(135deg, var(--primary, #2A598F) 0%, var(--primary-light, #6895BF) 100%);
   color: white;
   border-radius: 50%;
   width: 100%;
@@ -507,7 +507,7 @@
 
 .message-v2.user .message-bubble {
   /* background: linear-gradient(135deg, #64974a 0%, #6366f1 100%); */
-  background: linear-gradient(135deg, #2A598F 0%, #6895BF 100%);
+  background: linear-gradient(135deg, var(--primary, #2A598F) 0%, var(--primary-light, #6895BF) 100%);
   color: white;
   border-bottom-right-radius: 4px;
   text-align: left;
@@ -604,7 +604,7 @@
 .tech-insights-inline-btn {
   background: rgba(99, 102, 241, 0.1);
   border: none;
-  color: #2A598F;
+  color: var(--primary, #2A598F);
   cursor: pointer;
   font-size: 10px;
   font-weight: 500;
@@ -633,7 +633,7 @@
 .expand-btn {
   background: none;
   border: none;
-  color: #2A598F;
+  color: var(--primary, #2A598F);
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
@@ -650,7 +650,7 @@
 
 .expand-btn:hover {
   background: rgba(99, 102, 241, 0.1);
-  color: #2A598F;
+  color: var(--primary, #2A598F);
 }
 
 /* â”€â”€â”€ Suggestions (ambiguous prompt response) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -675,8 +675,8 @@
 
 .suggestion-btn {
   background: #ffffff;
-  border: 1.5px solid #2A598F;
-  color: #2A598F;
+  border: 1.5px solid var(--primary, #2A598F);
+  color: var(--primary, #2A598F);
   padding: 9px 16px;
   border-radius: 8px;
   font-size: 14px;
@@ -689,7 +689,7 @@
 }
 
 .suggestion-btn:hover:not(:disabled) {
-  background: #2A598F;
+  background: var(--primary, #2A598F);
   color: #ffffff;
   box-shadow: 0 3px 10px rgba(42, 89, 143, 0.25);
 }
@@ -728,7 +728,7 @@
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #2A598F 0%, #6895BF 100%);
+  background: linear-gradient(135deg, var(--primary, #2A598F) 0%, var(--primary-light, #6895BF) 100%);
   color: white;
   padding: 12px 20px;
   border-radius: 12px 12px 0 0;
@@ -764,13 +764,13 @@
 }
 
 .tab-btn.active {
-  color: #2A598F;
-  border-bottom-color: #2A598F;
+  color: var(--primary, #2A598F);
+  border-bottom-color: var(--primary, #2A598F);
   background: #f8fafc;
 }
 
 .tab-btn:hover {
-  color: #2A598F;
+  color: var(--primary, #2A598F);
   background: #f8fafc;
 }
 
@@ -810,7 +810,7 @@
 }
 
 .copy-btn {
-  background: #2A598F;
+  background: var(--primary, #2A598F);
   color: white;
   border: none;
   padding: 6px 12px;
@@ -825,7 +825,7 @@
 }
 
 .copy-btn:hover {
-  background: #2A598F;
+  background: var(--primary, #2A598F);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
@@ -995,7 +995,7 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  background: #2A598F;
+  background: var(--primary, #2A598F);
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -1501,7 +1501,7 @@
 }
 
 .chart-download-btn {
-  background: #2A598F;
+  background: var(--primary, #2A598F);
   color: #fff;
   border: none;
   padding: 4px 10px;
@@ -1511,7 +1511,7 @@
 }
 
 .chart-download-btn:hover {
-  background: #2A598F;
+  background: var(--primary, #2A598F);
 }
 /* Chart Insights sizing */
 .chart-large {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { signIn, confirmSignIn } from 'aws-amplify/auth';
 import './LoginPage.css';
 import demandArcLogo from '../assets/DemandARC_Logo_FullColor_Reversed_RGB.png';
+import { useClientConfig } from '../context/ClientConfigContext';
 
 /**
  * LoginPage
@@ -16,6 +17,14 @@ import demandArcLogo from '../assets/DemandARC_Logo_FullColor_Reversed_RGB.png';
  *   onLogin  () => void   called after a successful sign-in
  */
 function LoginPage({ onLogin }) {
+  // Pull live client branding from context — so the logo set in the admin
+  // dashboard (S3) appears here immediately rather than the bundled asset.
+  const clientConfig = useClientConfig();
+  const logoSrc      = clientConfig?.theme?.logoUrl || demandArcLogo;
+  const brandTitle   = clientConfig?.name
+    ? `${clientConfig.name} — Navigate IQ`
+    : 'Navigate IQ Insights';
+
   // ── Step: 'login' | 'new-password' ────────────────────────────
   const [step, setStep] = useState('login');
 
@@ -136,8 +145,13 @@ function LoginPage({ onLogin }) {
 
         {/* Brand */}
         <div className="login-brand">
-          <img src={demandArcLogo} alt="DemandARC" className="login-logo" />
-          <h1 className="login-title">Navigate IQ Insights</h1>
+          <img
+            src={logoSrc}
+            alt={clientConfig?.name || 'Logo'}
+            className="login-logo"
+            onError={(e) => { e.currentTarget.src = demandArcLogo; }}
+          />
+          <h1 className="login-title">{brandTitle}</h1>
           <p className="login-subtitle">
             {step === 'login'
               ? 'Sign in to access your data assistant'

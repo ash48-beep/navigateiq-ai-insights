@@ -1,13 +1,11 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, InternalServerErrorException } from '@nestjs/common';
 import axios from 'axios';
-
-// ❌❌ REMOVE jose static import (breaks Node18/20) ❌❌
-// import { SignJWT, importPKCS8 } from 'jose';
-// import { SignJWT } from 'jose';
-
 import * as snowflake from 'snowflake-sdk';
 import * as yaml from 'js-yaml';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 import config from '../../config/snowflake.config';
 
 @Injectable()
@@ -186,6 +184,39 @@ export class SnowflakeAnalystService implements OnModuleInit, OnModuleDestroy {
     this.publicKeyFpCache = hash.digest('base64');
     
     return this.publicKeyFpCache;
+  }
+
+  /**
+   * Upload a new YAML semantic model to the Snowflake stage and hot-reload it
+   * in memory so the next Cortex Analyst call uses the updated schema.
+   * Called by CsvPipelineService after every successful CSV upload.
+   */
+  async uploadAndReloadModel(yamlContent: string, modelName: string): Promise<void> {
+    const tmpPath = path.join(os.tmpdir(), `${modelName}.yaml`);
+    fsSync.writeFileSync(tmpPath, yamlContent, 'utf8');
+
+    try {
+      const stagePath =
+        `@${this.cfg.database}.${this.cfg.schema}.${this.cfg.stage}/${modelName}.yaml`;
+
+      await new Promise<void>((resolve, reject) => {
+        this.connection.execute({
+          sqlText: `PUT file://${tmpPath} ${stagePath} AUTO_COMPRESS=FALSE OVERWRITE=TRUE`,
+          complete: (err: any) => (err ? reject(err) : resolve()),
+        });
+      });
+
+      console.log(`[SemanticModel] Uploaded to stage: ${stagePath}`);
+
+      // Hot-reload in memory so next ask() call picks up the new schema
+      const model = yaml.load(yamlContent);
+      if (this.isValidModel(model)) {
+        this.semanticModel = model;
+        console.log(`[SemanticModel] Hot-reloaded in memory: ${modelName}`);
+      }
+    } finally {
+      await fs.unlink(tmpPath).catch(() => {});
+    }
   }
 
   async ask(prompt: string, executeQuery: boolean = true, history: any[] = []) {
