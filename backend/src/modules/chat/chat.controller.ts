@@ -1,32 +1,42 @@
-import { Controller, Post,Get, Body, Res, Header } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Post, Get, Body, Res, Req, UseGuards } from '@nestjs/common';
+import { Response, Request } from 'express';
 import { ChatService } from './chat.service';
 import { ChatDto } from './dto/chat.dto';
-import { ApiTags, ApiResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
-import * as fs from 'fs';
-import * as path from 'path';
+import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { CognitoAuthGuard } from '../../auth/cognito.guard';
+import { HistoryService } from '../history/history.service';
 
 @ApiTags('Chat')
+@ApiBearerAuth()
+@UseGuards(CognitoAuthGuard)
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly historyService: HistoryService,
+  ) {}
 
   @Post('ask')
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Successful query response with SQL and data' 
+  @ApiResponse({
+    status: 200,
+    description: 'Successful query response with SQL and data'
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Bad Request - Invalid input data' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid input data'
   })
-  async ask(@Body() body: ChatDto) {
+  async ask(@Body() body: ChatDto, @Req() req: Request) {
+    const userId: string = (req as any).user?.sub;
+    if (userId) {
+      // Fire-and-forget — do not await so it never delays the response
+      this.historyService.saveQuery(userId, body.message).catch(() => {});
+    }
     return this.chatService.processMessage(body.message, body.sessionId);
   }
 
   @Post('ask/stream')
   // @ApiExcludeEndpoint()
-  async askStream(@Body() body: ChatDto, @Res() response: Response) {
+  async askStream(@Body() body: ChatDto, @Res() response: Response, @Req() req: Request) {
     // Set SSE headers for streaming
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -34,8 +44,14 @@ export class ChatController {
     response.setHeader('X-Accel-Buffering', 'no');
     response.flushHeaders();
     
+    // Save query to DynamoDB (fire-and-forget — never delays the stream)
+    const userId: string = (req as any).user?.sub;
+    if (userId) {
+      this.historyService.saveQuery(userId, body.message).catch(() => {});
+    }
+
     let streamActive = true;
-    
+
     // Handle client disconnect
     const cleanup = () => {
       streamActive = false;
@@ -100,28 +116,10 @@ export class ChatController {
   }
 
   @Get('top-queries')
-  getTopQueries() {
-    const filePath = path.join(process.cwd(), 'logs', 'queries.json');
-
-    if (!fs.existsSync(filePath)) return [];
-
-    const raw = fs.readFileSync(filePath, 'utf-8') || '[]';
-    const data: { query: string }[] = JSON.parse(raw);
-
-    // Return last 5 unique queries, most-recent first (deduplicated)
-    const MAX_RECENT = 10; // developer-configurable
-    const seen = new Set<string>();
-    const recent: string[] = [];
-
-    for (let i = data.length - 1; i >= 0 && recent.length < MAX_RECENT; i--) {
-      const q = data[i]?.query;
-      if (q && !seen.has(q)) {
-        seen.add(q);
-        recent.push(q);
-      }
-    }
-
-    return recent;
+  async getTopQueries(@Req() req: Request) {
+    const userId: string = (req as any).user?.sub;
+    if (!userId) return [];
+    return this.historyService.getUserHistory(userId);
   }
 
 }

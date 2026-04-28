@@ -5,12 +5,14 @@ import './ResultsTable.css';
 import './Timestamp.css';
 import './DataTable.css';
 import apiService from '../services/apiService';
+import { getAuthHeaders, getAuthHeadersGet } from '../utils/authHeaders';
 import MarkdownRenderer from './MarkdownRenderer';
 import DataInsightsPieChart from './DataInsightsPieChart';
 import TimelineChart, { detectDateKey } from './TimelineChart';
 import { shouldShowPieChart, shouldShowTimeline, TIMELINE_QUERY_KEYWORDS } from '../utils/chartHelpers';
 import headerImage from '../assets/header_image.jpg';
 import demandArcLogo from '../assets/DemandARC_Logo_FullColor_Reversed_RGB.png';
+import { useClientConfig } from '../context/ClientConfigContext';
 // ===============================
 // ChatGPT-style Prompt Guard
 // ===============================
@@ -72,6 +74,12 @@ Try asking a question related to cars.
 
 
 const Chatbot = () => {
+  // Live client branding from admin dashboard → backend → context.
+  // Falls back to bundled assets if the client config has no S3 URL set.
+  const clientConfig  = useClientConfig();
+  const dynamicLogo   = clientConfig?.theme?.logoUrl        || demandArcLogo;
+  const dynamicHeader = clientConfig?.theme?.headerImageUrl || headerImage;
+
   const [messages, setMessages] = useState([
     { text: "Hello! I'm your AI Data Assistant. I can help you analyze and retrieve insights from your data. Ask me anything!", sender: "bot", type: "text", timestamp: new Date() }
   ]);
@@ -90,7 +98,7 @@ const Chatbot = () => {
   // Stable session ID per mount — sent with every request so the backend can
   // maintain Cortex Analyst conversation history across follow-up questions
   const sessionIdRef = useRef(`session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  const [topQueries, setTopQueries] = useState([]);
+  const [promptHistory, setPromptHistory] = useState([]);
   const [latestQuery, setLatestQuery] = useState(''); // query that triggered the current Technical Insights modal
 
 
@@ -124,22 +132,18 @@ const Chatbot = () => {
     }, 200);
   };
 
-  const fetchTopQueries = async () => {
+  const fetchPromptHistory = async () => {
     try {
       const API_BASE_URL =
         process.env.REACT_APP_API_URL || 'http://localhost:3002/api/v1';
 
-      const res = await fetch(`${API_BASE_URL}/chat/top-queries`, {
-        headers: {
-          'ngrok-skip-browser-warning': 'true',
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      });
+      const headers = await getAuthHeadersGet();
+      const res = await fetch(`${API_BASE_URL}/history`, { headers });
 
       const data = await res.json();
-      setTopQueries(data);
+      setPromptHistory(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to fetch top queries", err);
+      console.error('Failed to fetch prompt history', err);
     }
   };
 
@@ -150,14 +154,14 @@ const Chatbot = () => {
   }, [messages]);
 
   useEffect(() => {
-    fetchTopQueries();
+    fetchPromptHistory();
   }, []);
 
-  // Refresh popular queries every time a query finishes processing
+  // Refresh history every time a query finishes processing
   const prevIsProcessingRef = useRef(false);
   useEffect(() => {
     if (prevIsProcessingRef.current === true && isProcessing === false) {
-      fetchTopQueries();
+      fetchPromptHistory();
     }
     prevIsProcessingRef.current = isProcessing;
   }, [isProcessing]);
@@ -261,13 +265,10 @@ const Chatbot = () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api/v1';
 
+      const headers = await getAuthHeaders();
       const response = await fetch(`${API_BASE_URL}/chat/ask/stream`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
+        headers,
         credentials: 'same-origin',
         body: JSON.stringify({ message: query, sessionId: sessionIdRef.current })
       });
@@ -778,7 +779,7 @@ const Chatbot = () => {
       <div
         className="chatbot-v2-header"
         style={{
-          backgroundImage: `url(${headerImage})`,
+          backgroundImage: `url(${dynamicHeader})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -786,7 +787,12 @@ const Chatbot = () => {
         <div className="header-info">
           <h2 className="header-title">
             Navigate IQ Insights&nbsp;&nbsp;by&nbsp;
-            <img src={demandArcLogo} alt="DemandARC" className="header-logo-img" />
+            <img
+              src={dynamicLogo}
+              alt={clientConfig?.name || 'Logo'}
+              className="header-logo-img"
+              onError={(e) => { e.currentTarget.src = demandArcLogo; }}
+            />
           </h2>
         </div>
         <div className="header-controls">
@@ -840,27 +846,28 @@ const Chatbot = () => {
             </div>
           )}
 
-          {/* CHAT HISTORY SECTION — always visible, even when empty */}
+          {/* PROMPT HISTORY SECTION — per-user, fetched from DynamoDB */}
           {selectedDashboard && (
             <div className="chat-history-section">
               <div className="sidebar-header">
-                <h4>Chat history</h4>
+                <h4>Prompt history</h4>
               </div>
 
               <div className="questions-list">
-                {topQueries.length > 0 ? (
-                  topQueries.map((query, index) => (
+                {promptHistory.length > 0 ? (
+                  promptHistory.map((query, index) => (
                     <button
                       key={`history-${index}`}
                       onClick={() => handleQuerySelect(query)}
                       className={`question-item history ${isProcessing ? 'disabled' : ''}`}
                       disabled={isProcessing}
+                      title={query}
                     >
                       {query}
                     </button>
                   ))
                 ) : (
-                  <p className="chat-history-empty">No recent queries yet.</p>
+                  <p className="chat-history-empty">No prompt history yet.</p>
                 )}
               </div>
             </div>

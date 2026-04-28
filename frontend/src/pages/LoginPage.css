@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f1419 0%, #1a1d29 50%, #0f1419 100%);
+  background: linear-gradient(135deg, var(--bg-from) 0%, var(--bg-to) 50%, var(--bg-from) 100%);
   padding: 24px;
 }
 
@@ -85,7 +85,7 @@
 }
 
 .login-input:focus {
-  border-color: #4e9af1;
+  border-color: var(--accent);
   background: rgba(78, 154, 241, 0.06);
 }
 
@@ -118,7 +118,7 @@
 .login-btn {
   margin-top: 4px;
   padding: 12px;
-  background: linear-gradient(135deg, #2E75B6, #1a5c9e);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
   border: none;
   border-radius: 8px;
   color: #ffffff;
@@ -181,7 +181,7 @@
   flex-shrink: 0;
   margin-top: 1px;
   font-size: 14px;
-  color: #4e9af1;
+  color: var(--accent);
 }
 
 /* ── Ghost / back button ─────────────────────────────────────── */

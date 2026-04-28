@@ -5,13 +5,26 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Accept the backend URL as a build argument so CRA can bake it in
+# ── Build-time variables (CRA bakes all REACT_APP_* into the JS bundle) ──
 ARG REACT_APP_API_URL=http://localhost:3002/api/v1
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
-# Install dependencies first (layer-cache friendly)
+# Admin Cognito pool — baked in at build time (used only on /admin route)
+# Client Cognito config is fetched at runtime from /client-config/:slug
+ARG REACT_APP_ADMIN_COGNITO_USER_POOL_ID
+ENV REACT_APP_ADMIN_COGNITO_USER_POOL_ID=$REACT_APP_ADMIN_COGNITO_USER_POOL_ID
+
+ARG REACT_APP_ADMIN_COGNITO_CLIENT_ID
+ENV REACT_APP_ADMIN_COGNITO_CLIENT_ID=$REACT_APP_ADMIN_COGNITO_CLIENT_ID
+
+ARG REACT_APP_ADMIN_COGNITO_REGION=ap-south-1
+ENV REACT_APP_ADMIN_COGNITO_REGION=$REACT_APP_ADMIN_COGNITO_REGION
+
+# Install dependencies
+# Using npm install instead of npm ci to handle lock file version differences
+# across npm versions (development vs Docker image)
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Copy source and build
 COPY . .

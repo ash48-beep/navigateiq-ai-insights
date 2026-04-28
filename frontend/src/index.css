@@ -1,3 +1,12 @@
+/* ── CSS variable defaults (overridden per client by ClientConfigContext) ── */
+:root {
+  --primary:       #2A598F;
+  --primary-light: #6895BF;
+  --bg-from:       #0f1419;
+  --bg-to:         #1a1d29;
+  --accent:        #4e9af1;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

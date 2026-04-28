@@ -140,6 +140,79 @@ export class OpenAIService {
     }
   }
 
+  /**
+   * Takes a base Cortex Analyst YAML (structurally correct but bare) and uses
+   * GPT to add business-meaningful descriptions and verified_queries.
+   * Returns the enriched YAML string, or the original if GPT fails.
+   */
+  async enrichSemanticModel(
+    baseYaml: string,
+    columns: { name: string; type: 'date' | 'numeric' | 'varchar' }[],
+    clientName: string,
+    tableName: string,
+    database: string,
+    schema: string,
+  ): Promise<string> {
+    if (!this.openai) return baseYaml;
+
+    const columnList = columns
+      .map(c => `  - ${c.name} (${c.type})`)
+      .join('\n');
+
+    const fqTable = `${database}.${schema}.${tableName}`;
+
+    const systemPrompt = `You are a Cortex Analyst semantic model expert.
+Your job is to enrich a base YAML semantic model with business-meaningful descriptions and verified_queries.
+Return ONLY valid YAML — no markdown fences, no explanation, no commentary.`;
+
+    const userPrompt = `Client: ${clientName}
+Table: ${fqTable}
+
+Columns detected (name and type):
+${columnList}
+
+Base YAML to enrich:
+\`\`\`yaml
+${baseYaml}
+\`\`\`
+
+Rules:
+1. Add a short, business-meaningful "description" field to every dimension and fact based on the column name and type
+2. For facts (numeric), also add a "default_aggregation" field — choose one of: SUM, COUNT, AVG, MIN, MAX based on what makes business sense for that column name
+3. Do NOT add verified_queries — leave only the fields present in the base YAML plus the new description and default_aggregation fields
+4. Keep all existing fields (name, base_table, data_type, expr) unchanged
+5. Return ONLY valid YAML — no markdown code fences, no prose`;
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user',   content: userPrompt   },
+        ],
+        temperature: 0.3,
+        max_tokens: 4000,
+      });
+
+      const raw = completion.choices[0]?.message?.content ?? '';
+
+      // Strip any accidental markdown fences GPT might add
+      const cleaned = raw
+        .replace(/^```ya?ml\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
+
+      // Validate it's parseable YAML before returning
+      const jsYaml = await import('js-yaml');
+      jsYaml.load(cleaned);    // throws if invalid
+      return cleaned;
+    } catch (err: any) {
+      console.error('[OpenAI] Semantic model enrichment failed:', err.message);
+      return baseYaml;         // fall back to the structural YAML
+    }
+  }
+
   async enhanceResponse(
     cortexResponse: any,
     userPrompt: string,
