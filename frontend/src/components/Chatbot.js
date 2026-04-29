@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { signOut } from 'aws-amplify/auth';
 //import './Chatbot.css';
 import './Chatbot_v2.css';
 import './ResultsTable.css';
@@ -174,14 +175,7 @@ const Chatbot = () => {
     { id: 'finance', name: 'Financial Reports', icon: 'fas fa-coins' }
   ];
 
-  const dashboardQueries = {
-  'analytics': [
-  'Which asset has the most decision makers?',
-  'Leads count based on industry',
-  'What is the count of leads, by buying roles by asset?',
-  'Top 10 accounts with the most leads'
-]
-};
+  const clientFaqs = clientConfig?.faqs ?? [];
 
   const handleDashboardSelect = (dashboard) => {
     setSelectedDashboard(dashboard.id);
@@ -690,11 +684,15 @@ const Chatbot = () => {
   };
 
   const resetChat = () => {
+    // Rotate session ID so backend starts a fresh Cortex conversation
+    sessionIdRef.current = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setCurrentStep('queries');
     setSelectedDashboard('analytics');
     setCustomQuery('');
     setIsTyping(false);
+    setIsProcessing(false);
     setExpandedMessages(new Set());
+    setLatestTechnicalData(null);
     setMessages([
       { text: "Hello! I'm your AI Data Assistant. I can help you analyze and retrieve insights from your data. Ask me anything!", sender: "bot", type: "text", timestamp: new Date() }
     ]);
@@ -812,7 +810,17 @@ const Chatbot = () => {
               ))}
             </select>
           )} */}
-          <button onClick={resetChat} className="reset-btn"><i className="fas fa-redo"></i></button>
+          <button onClick={resetChat} className="reset-btn" title="Reset chat"><i className="fas fa-redo"></i></button>
+          <button
+            className="header-logout-btn"
+            onClick={async () => { try { await signOut(); } catch {} window.location.reload(); }}
+            title="Logout"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Logout
+          </button>
         </div>
       </div>
       <div className="powered-by">
@@ -829,10 +837,10 @@ const Chatbot = () => {
           </div>
 
           {/*FAQ SECTION */}
-          {selectedDashboard && (
+          {clientFaqs.length > 0 && (
             <div className="questions-section">
               <div className="questions-list">
-                {dashboardQueries[selectedDashboard].map((query, index) => (
+                {clientFaqs.map((query, index) => (
                   <button
                     key={index}
                     onClick={() => handleQuerySelect(query)}

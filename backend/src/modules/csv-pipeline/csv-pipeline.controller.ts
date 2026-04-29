@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Param,
+  Body,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -12,7 +13,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { AdminCognitoAuthGuard } from '../../auth/admin-cognito.guard';
-import { CsvPipelineService } from './csv-pipeline.service';
+import { CsvPipelineService, UploadMode } from './csv-pipeline.service';
+
+const VALID_MODES: UploadMode[] = ['replace', 'append', 'append_extend'];
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -23,8 +26,9 @@ export class CsvPipelineController {
 
   /**
    * POST /api/v1/admin/clients/:slug/upload-csv
-   * Accepts a multipart/form-data CSV file, runs the full pipeline:
-   *   analyze → PUT to stage → COPY INTO staging → cast to final table
+   * Multipart form-data fields:
+   *   file  — the CSV file
+   *   mode  — 'replace' | 'append' | 'append_extend'  (default: 'replace')
    */
   @Post(':slug/upload-csv')
   @HttpCode(HttpStatus.OK)
@@ -32,22 +36,29 @@ export class CsvPipelineController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max
+      limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
     }),
   )
   async uploadCsv(
     @Param('slug') slug: string,
     @UploadedFile() file: any,
+    @Body('mode') rawMode?: string,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded. Send the CSV as form-data field "file".');
     }
-
-    const name: string = file.originalname || '';
-    if (!name.toLowerCase().endsWith('.csv')) {
+    if (!(file.originalname || '').toLowerCase().endsWith('.csv')) {
       throw new BadRequestException('Only .csv files are accepted.');
     }
 
-    return this.pipelineService.uploadAndLoad(slug, file.buffer as Buffer, name);
+    const mode: UploadMode = VALID_MODES.includes(rawMode as UploadMode)
+      ? (rawMode as UploadMode)
+      : 'replace';
+
+    return this.pipelineService.uploadAndLoad(
+      slug,
+      file.buffer as Buffer,
+      mode,
+    );
   }
 }

@@ -26,7 +26,6 @@ const mockClient = {
   snowflakeSchema:   'PUBLIC',
   snowflakeTable:    'ALPHA_DATA',
   snowflakeStageName:'CSV_STAGE',
-  idPrefix:          'L-',
   dateColumns:       {},
 };
 
@@ -111,13 +110,13 @@ describe('CsvPipelineService', () => {
   describe('Snowflake config validation', () => {
     it('throws BadRequestException when snowflakeAccount is missing', async () => {
       mockClientsService.getClient.mockResolvedValueOnce({ ...mockClient, snowflakeAccount: undefined });
-      await expect(service.uploadAndLoad('alpha', csvBuffer, 'data.csv'))
+      await expect(service.uploadAndLoad('alpha', csvBuffer))
         .rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when snowflakeTable is missing', async () => {
       mockClientsService.getClient.mockResolvedValueOnce({ ...mockClient, snowflakeTable: undefined });
-      await expect(service.uploadAndLoad('alpha', csvBuffer, 'data.csv'))
+      await expect(service.uploadAndLoad('alpha', csvBuffer))
         .rejects.toThrow(BadRequestException);
     });
 
@@ -127,7 +126,7 @@ describe('CsvPipelineService', () => {
         snowflakeUser:     undefined,
         snowflakePassword: undefined,
       });
-      await expect(service.uploadAndLoad('alpha', csvBuffer, 'data.csv'))
+      await expect(service.uploadAndLoad('alpha', csvBuffer))
         .rejects.toThrow(/User.*Password|Password.*User/);
     });
   });
@@ -136,42 +135,42 @@ describe('CsvPipelineService', () => {
 
   describe('Snowflake execution flow', () => {
     it('connects to client Snowflake', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       expect(mockSfService.createConnection).toHaveBeenCalledWith(mockClient);
     });
 
     it('creates internal stage IF NOT EXISTS', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       const sqls = mockSfExecute.mock.calls.map((c: any) => c[1] as string);
       expect(sqls.some(s => s.includes('CREATE STAGE IF NOT EXISTS'))).toBe(true);
     });
 
     it('creates file format', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       const sqls = mockSfExecute.mock.calls.map((c: any) => c[1] as string);
       expect(sqls.some(s => s.includes('CREATE OR REPLACE FILE FORMAT'))).toBe(true);
     });
 
     it('creates final typed table with CREATE OR REPLACE TABLE', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       const sqls = mockSfExecute.mock.calls.map((c: any) => c[1] as string);
       expect(sqls.some(s => s.includes('CREATE OR REPLACE TABLE ALPHA_DATA'))).toBe(true);
     });
 
     it('drops the staging table after final table creation', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       const sqls = mockSfExecute.mock.calls.map((c: any) => c[1] as string);
       expect(sqls.some(s => s.includes('DROP TABLE IF EXISTS'))).toBe(true);
     });
 
     it('destroys the connection in the finally block', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       expect(mockSfService.destroy).toHaveBeenCalledWith(mockConn);
     });
 
     it('destroys connection even when an execute call throws', async () => {
       mockSfExecute.mockRejectedValueOnce(new Error('Stage error'));
-      await expect(service.uploadAndLoad('alpha', csvBuffer, 'data.csv')).rejects.toThrow();
+      await expect(service.uploadAndLoad('alpha', csvBuffer)).rejects.toThrow();
       expect(mockSfService.destroy).toHaveBeenCalled();
     });
   });
@@ -180,21 +179,21 @@ describe('CsvPipelineService', () => {
 
   describe('return value', () => {
     it('returns rowsLoaded, tableName, and columnsDetected', async () => {
-      const result = await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      const result = await service.uploadAndLoad('alpha', csvBuffer);
       expect(result.rowsLoaded).toBe(30);
       expect(result.tableName).toBe('ALPHA_DATA');
       expect(result.columnsDetected).toHaveLength(3);
     });
 
     it('columnsDetected includes name, type, and format', async () => {
-      const result = await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      const result = await service.uploadAndLoad('alpha', csvBuffer);
       const dateCol = result.columnsDetected.find(c => c.name === 'JOIN_DATE')!;
       expect(dateCol.type).toBe('date');
       expect(dateCol.format).toBe('YYYY-MM-DD');
     });
 
     it('returns empty warnings when no nulls in typed columns', async () => {
-      const result = await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      const result = await service.uploadAndLoad('alpha', csvBuffer);
       expect(result.warnings).toHaveLength(0);
     });
 
@@ -205,7 +204,7 @@ describe('CsvPipelineService', () => {
         if (sql.includes('COUNT(*)') && sql.includes('JOIN_DATE'))return Promise.resolve([{ CNT: 0 }]);
         return Promise.resolve([]);
       });
-      const result = await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      const result = await service.uploadAndLoad('alpha', csvBuffer);
       expect(result.warnings.length).toBeGreaterThan(0);
       expect(result.warnings[0].column).toBe('REVENUE');
     });
@@ -215,7 +214,7 @@ describe('CsvPipelineService', () => {
 
   describe('date column persistence', () => {
     it('saves detected date formats back to ClientRegistry', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       expect(mockClientsService.updateClient).toHaveBeenCalledWith(
         'alpha',
         expect.objectContaining({ dateColumns: expect.objectContaining({ JOIN_DATE: 'YYYY-MM-DD' }) }),
@@ -227,7 +226,7 @@ describe('CsvPipelineService', () => {
 
   describe('semantic model generation', () => {
     it('calls enrichSemanticModel with column names and types', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       expect(mockOpenaiService.enrichSemanticModel).toHaveBeenCalledWith(
         expect.any(String),
         expect.arrayContaining([
@@ -243,7 +242,7 @@ describe('CsvPipelineService', () => {
     });
 
     it('uploads enriched YAML to the analyst stage', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       expect(mockAnalystService.uploadAndReloadModel).toHaveBeenCalledWith(
         'enriched-yaml-content',
         'alpha_semantic_model',
@@ -257,7 +256,7 @@ describe('CsvPipelineService', () => {
         return Promise.resolve(baseYaml);
       });
 
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
 
       const model: any = yaml.load(capturedBaseYaml);
       expect(model.tables[0].base_table).toEqual({
@@ -274,7 +273,7 @@ describe('CsvPipelineService', () => {
         return Promise.resolve(baseYaml);
       });
 
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
 
       const model: any = yaml.load(capturedBaseYaml);
       const tbl = model.tables[0];
@@ -287,7 +286,7 @@ describe('CsvPipelineService', () => {
 
     it('does not throw when semantic model upload fails (non-fatal)', async () => {
       mockAnalystService.uploadAndReloadModel.mockRejectedValueOnce(new Error('Stage PUT failed'));
-      await expect(service.uploadAndLoad('alpha', csvBuffer, 'data.csv')).resolves.toBeDefined();
+      await expect(service.uploadAndLoad('alpha', csvBuffer)).resolves.toBeDefined();
     });
   });
 
@@ -295,7 +294,7 @@ describe('CsvPipelineService', () => {
 
   describe('temp file cleanup', () => {
     it('writes temp CSV file before upload', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('csv_alpha_'),
         csvBuffer,
@@ -303,7 +302,7 @@ describe('CsvPipelineService', () => {
     });
 
     it('deletes temp file in finally block', async () => {
-      await service.uploadAndLoad('alpha', csvBuffer, 'data.csv');
+      await service.uploadAndLoad('alpha', csvBuffer);
       expect(fs.unlinkSync).toHaveBeenCalled();
     });
   });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchAuthSession, signOut } from 'aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { configureAdminAmplify } from '../aws-config-admin';
 import AdminLoginPage from '../pages/AdminLoginPage';
 
@@ -33,10 +33,6 @@ function AdminAuthGuard({ children }) {
     checkSession();
   }, [checkSession]);
 
-  const handleSignOut = async () => {
-    try { await signOut(); } catch {}
-    setAuthState('unauthenticated');
-  };
 
   if (authState === 'loading') {
     return (
@@ -60,37 +56,7 @@ function AdminAuthGuard({ children }) {
     return <AdminLoginPage onLogin={() => setAuthState('authenticated')} />;
   }
 
-  return (
-    <>
-      <button
-        onClick={handleSignOut}
-        style={{
-          position: 'fixed', top: 12, right: 16, zIndex: 9999,
-          background: 'rgba(255,255,255,0.07)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: 8, padding: '6px 14px',
-          color: 'rgba(255,255,255,0.65)',
-          fontSize: 12, fontWeight: 600, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 6,
-          backdropFilter: 'blur(8px)',
-          transition: 'background 0.2s, color 0.2s',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = 'rgba(239,68,68,0.15)';
-          e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)';
-          e.currentTarget.style.color = '#fca5a5';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-          e.currentTarget.style.color = 'rgba(255,255,255,0.65)';
-        }}
-      >
-        <span style={{ fontSize: 13 }}>⎋</span> Sign out
-      </button>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 export default AdminAuthGuard;
