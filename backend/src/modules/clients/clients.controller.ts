@@ -32,7 +32,8 @@ export class ClientConfigController {
 
     // Return only what the frontend needs — never expose internal fields
     return {
-      name:             client.name,
+      name:   client.name,
+      status: client.status,
       cognito: {
         userPoolId: client.cognitoUserPoolId,
         clientId:   client.cognitoClientId,
@@ -48,6 +49,7 @@ export class ClientConfigController {
         headerImageUrl:    client.headerImageUrl,
         faviconUrl:        client.faviconUrl,
       },
+      faqs: client.faqs ?? [],
     };
   }
 }

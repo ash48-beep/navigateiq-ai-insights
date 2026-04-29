@@ -136,16 +136,37 @@ export function ClientConfigProvider({ slug, children }) {
   if (error) {
     return (
       <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#0f1419',
-        color: 'rgba(255,255,255,0.5)',
-        fontFamily: 'sans-serif',
-        fontSize: 14,
+        minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', background: '#0f1419',
+        color: 'rgba(255,255,255,0.5)', fontFamily: 'sans-serif', fontSize: 14,
       }}>
         {error}
+      </div>
+    );
+  }
+
+  if (config?.status === 'inactive') {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0f1419 0%, #1a1d29 100%)',
+        fontFamily: "'Inter', -apple-system, sans-serif", textAlign: 'center', padding: '24px',
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%',
+          background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 28, marginBottom: 24,
+        }}>
+          ⚠
+        </div>
+        <h1 style={{ margin: '0 0 12px', fontSize: 22, fontWeight: 700, color: '#f1f5f9' }}>
+          Service Unavailable
+        </h1>
+        <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.4)', maxWidth: 340, lineHeight: 1.6 }}>
+          This portal is currently unavailable. Please contact your administrator for assistance.
+        </p>
       </div>
     );
   }

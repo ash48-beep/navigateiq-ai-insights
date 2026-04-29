@@ -178,7 +178,7 @@ ${baseYaml}
 
 Rules:
 1. Add a short, business-meaningful "description" field to every dimension and fact based on the column name and type
-2. For facts (numeric), also add a "default_aggregation" field — choose one of: SUM, COUNT, AVG, MIN, MAX based on what makes business sense for that column name
+2. For facts (numeric), also add a "default_aggregation" field — choose one of: sum, avg, min, max (lowercase only, no COUNT) based on what makes business sense for that column name
 3. Do NOT add verified_queries — leave only the fields present in the base YAML plus the new description and default_aggregation fields
 4. Keep all existing fields (name, base_table, data_type, expr) unchanged
 5. Return ONLY valid YAML — no markdown code fences, no prose`;
@@ -197,11 +197,20 @@ Rules:
       const raw = completion.choices[0]?.message?.content ?? '';
 
       // Strip any accidental markdown fences GPT might add
-      const cleaned = raw
+      let cleaned = raw
         .replace(/^```ya?ml\s*/i, '')
         .replace(/^```\s*/i, '')
         .replace(/```\s*$/i, '')
         .trim();
+
+      // Normalise default_aggregation: lowercase and replace COUNT (invalid in Snowflake) with sum
+      cleaned = cleaned.replace(
+        /(default_aggregation\s*:\s*)([A-Za-z]+)/g,
+        (_match, prefix, value) => {
+          const lower = value.toLowerCase();
+          return prefix + (lower === 'count' ? 'sum' : lower);
+        },
+      );
 
       // Validate it's parseable YAML before returning
       const jsYaml = await import('js-yaml');

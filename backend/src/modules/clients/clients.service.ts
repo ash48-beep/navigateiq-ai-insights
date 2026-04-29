@@ -39,8 +39,8 @@ export interface ClientRecord {
   snowflakeSchema?: string;      // e.g. "PUBLIC"
   snowflakeTable?: string;       // e.g. "LEADS_DATA"
   snowflakeStageName?: string;   // e.g. "CSV_UPLOAD_STAGE"
-  idPrefix?: string;             // prefix for auto-generated ID col; "" = no ID col
   dateColumns?: Record<string, string>; // { "LEAD_DATE": "DD-MM-YYYY" }
+  faqs?: string[];               // per-client FAQ questions shown in sidebar
 }
 
 @Injectable()
